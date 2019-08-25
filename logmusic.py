@@ -66,6 +66,23 @@ class VolumioTrack(Track):
             state['trackType'])
 
 
+class RaumfeldTrack(Track):
+    def __init__(self, title, artist, album, tracktype):
+        Track.__init__(self, title, artist, album)
+        self.tracktype = tracktype
+        self.source = 'raumfeld'
+
+    @staticmethod
+    def from_currently_playing():
+        raumfeldstate = urllib.request.urlopen('http://192.168.2.126:8080/raumserver/controller/getRendererState?id=Wohnzimmer').read()
+        state = json.loads(raumfeldstate)['data'][0]['mediaItem']
+        return RaumfeldTrack(
+            state['title'],
+            state['artist'],
+            state['album'],
+            state['name'])
+
+
 class DBConnector(object):
     def __init__(self, filename):
         self.connection = None
@@ -123,6 +140,8 @@ class DBConnector(object):
 
 if __name__ == '__main__':
     #print(json.dumps(state, indent=4))
+
+    #track = RaumfeldTrack.from_currently_playing()
 
     track = VolumioTrack.from_currently_playing()
 
