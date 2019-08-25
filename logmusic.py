@@ -9,12 +9,16 @@
 # Source (Volumio/Raumfeld)
 # Timestamp
 
+from datetime import datetime
 import json
+import pylast
+from pylast import LastFMNetwork
 import sqlite3
 import time
 import urllib.request
 
-logfile="musiclog.db"
+from config import *
+
 
 class Track(object):
     def __init__(self, title, artist, album):
@@ -147,11 +151,37 @@ class DBConnector(object):
         return len(self.cursor.fetchall()) == 1
 
 
-if __name__ == '__main__':
-    raumfeld_address = ('192.168.2.126', 8080)
-    volumio_address = ('192.168.2.104', 3000)
+class LastFMConnector(LastFMNetwork):
+    def __init__(self, api_key, api_secret, username, password_hash):
+        LastFMNetwork.__init__(
+                self,
+                api_key=api_key,
+                api_secret=api_secret,
+                username=username,
+                password_hash=password_hash)
 
-    track1 = RaumfeldTrack.from_currently_playing(raumfeld_address)
+    def scrobble(self, track):
+        LastFMNetwork.scrobble(self, track.artist, track.title, time.time(), track.album)
+
+
+if __name__ == '__main__':
+    #uri = "http://ws.audioscrobbler.com/2.0/?method=auth.gettoken&api_key={}&format=json".format(API_KEY)
+    #result = urllib.request.urlopen(uri).read()
+    #print(result)
+
+    network = LastFMConnector(
+            api_key=API_KEY,
+            api_secret=API_SECRET,
+            username=lastfm_username,
+            password_hash=lastfm_password_hash)
+
+    #track = VolumioTrack.from_currently_playing(volumio_address)
+    #print(track)
+    #network.scrobble(track.artist, track.title, datetime.utcnow(), track.album)
+    #network.scrobble(track)
+
+    #track1 = RaumfeldTrack.from_currently_playing(raumfeld_address)
+    track1 = None
     track2 = VolumioTrack.from_currently_playing(volumio_address)
 
     tracks = []
@@ -160,10 +190,11 @@ if __name__ == '__main__':
     if track2:
         tracks.append(track2)
 
-    with DBConnector(logfile) as db:
+    with DBConnector(dbfile) as db:
         for track in tracks:
             last_tracks = db.get_last_tracks(4, track.source)
             if track not in last_tracks:
                 db.add(track)
+                network.scrobble(track)
                 timestamp = time.strftime('%e.%d.%y %H:%M:%S')
                 print(timestamp, ': ', track)
