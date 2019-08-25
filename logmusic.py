@@ -32,7 +32,7 @@ class Track(object):
         return not self.__eq__(other)
 
     def __str__(self):
-        return self.artist + " - " + self.title
+        return (self.artist if self.artist else '') + " - " + self.title
 
     def get_dbvalues(self):
         return (
@@ -56,8 +56,8 @@ class VolumioTrack(Track):
         self.source = 'volumio'
 
     @staticmethod
-    def from_currently_playing():
-        volumiostate = urllib.request.urlopen('http://192.168.2.104:3000/api/v1/getState').read()
+    def from_currently_playing(source):
+        volumiostate = urllib.request.urlopen('http://{}:{}/api/v1/getState'.format(source[0], source[1])).read()
         state = json.loads(volumiostate)
         return VolumioTrack(
             state['title'],
@@ -73,14 +73,17 @@ class RaumfeldTrack(Track):
         self.source = 'raumfeld'
 
     @staticmethod
-    def from_currently_playing():
-        raumfeldstate = urllib.request.urlopen('http://192.168.2.126:8080/raumserver/controller/getRendererState?id=Wohnzimmer').read()
-        state = json.loads(raumfeldstate)['data'][0]['mediaItem']
-        return RaumfeldTrack(
-            state['title'],
-            state['artist'],
-            state['album'],
-            state['name'])
+    def from_currently_playing(source):
+        raumfeldstate = urllib.request.urlopen('http://{}:{}/raumserver/controller/getRendererState'.format(source[0], source[1])).read()
+        try:
+            state = json.loads(raumfeldstate)['data'][0]['mediaItem']
+            return RaumfeldTrack(
+                state['title'] if state['title'] else '',
+                state['artist'] if state['artist'] else '',
+                state['album'] if state['album'] else '',
+                state['name'] if state['name'] else '')
+        except TypeError:
+            return None
 
 
 class DBConnector(object):
@@ -120,15 +123,21 @@ class DBConnector(object):
         self.cursor.execute(entry_cmd, track.get_dbvalues())
         self.connection.commit()
 
-    def get_last_entries(self, n=1):
+    def get_last_entries(self, n=1, source=None):
         lastentry_cmd = """
         SELECT * FROM playlog ORDER BY id DESC LIMIT ?;
         """
-        self.cursor.execute(lastentry_cmd, (n,))
+        lastentry_cmd_filtered = """
+        SELECT * FROM playlog WHERE source = ? ORDER BY id DESC LIMIT ?;
+        """
+        if source is None:
+            self.cursor.execute(lastentry_cmd, (n,))
+        else:
+            self.cursor.execute(lastentry_cmd_filtered, (n, source))
         return self.cursor.fetchall()
 
-    def get_last_tracks(self, n=1):
-        return [i for i in map(Track.from_dbvalues, self.get_last_entries(n))]
+    def get_last_tracks(self, n=1, source=None):
+        return [i for i in map(Track.from_dbvalues, self.get_last_entries(source, n))]
 
     def is_existent(self):
         existent_cmd = """
@@ -139,15 +148,22 @@ class DBConnector(object):
 
 
 if __name__ == '__main__':
-    #print(json.dumps(state, indent=4))
+    raumfeld_address = ('192.168.2.126', 8080)
+    volumio_address = ('192.168.2.104', 3000)
 
-    #track = RaumfeldTrack.from_currently_playing()
+    track1 = RaumfeldTrack.from_currently_playing(raumfeld_address)
+    track2 = VolumioTrack.from_currently_playing(volumio_address)
 
-    track = VolumioTrack.from_currently_playing()
+    tracks = []
+    if track1:
+        tracks.append(track1)
+    if track2:
+        tracks.append(track2)
 
     with DBConnector(logfile) as db:
-        last_tracks = db.get_last_tracks(4)
-        if track not in last_tracks:
-            db.add(track)
-            timestamp = time.strftime('%e.%d.%y %H:%M:%S')
-            print(timestamp, ': ', track)
+        for track in tracks:
+            last_tracks = db.get_last_tracks(4, track.source)
+            if track not in last_tracks:
+                db.add(track)
+                timestamp = time.strftime('%e.%d.%y %H:%M:%S')
+                print(timestamp, ': ', track)
