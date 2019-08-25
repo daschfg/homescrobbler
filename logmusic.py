@@ -14,7 +14,7 @@ import sqlite3
 import time
 import urllib.request
 
-logfile="/home/daniel/musiclog.db"
+logfile="musiclog.db"
 
 class Track(object):
     def __init__(self, title, artist, album):
@@ -64,6 +64,8 @@ class DBConnector(object):
     def __enter__(self):
         self.connection = sqlite3.connect(self.filename)
         self.cursor = self.connection.cursor()
+        if not self.is_existent():
+            self.create()
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):
@@ -91,12 +93,21 @@ class DBConnector(object):
         self.connection.commit()
 
     def get_last_entries(self, n=1):
-        lastentry_cmd = """SELECT * FROM playlog ORDER BY id DESC LIMIT ?;"""
+        lastentry_cmd = """
+        SELECT * FROM playlog ORDER BY id DESC LIMIT ?;
+        """
         self.cursor.execute(lastentry_cmd, (n,))
         return self.cursor.fetchall()
 
     def get_last_tracks(self, n=1):
         return [i for i in map(Track.from_dbvalues, self.get_last_entries(n))]
+
+    def is_existent(self):
+        existent_cmd = """
+        SELECT name FROM sqlite_master WHERE type='table' AND name='playlog';
+        """
+        self.cursor.execute(existent_cmd)
+        return len(self.cursor.fetchall()) == 1
 
 
 if __name__ == '__main__':
