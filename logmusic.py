@@ -48,11 +48,22 @@ class Track(object):
         title, artist, album = dbvalue[1:4]
         return Track(title, artist, album)
 
+
 class VolumioTrack(Track):
     def __init__(self, title, artist, album, tracktype):
         Track.__init__(self, title, artist, album)
         self.tracktype = tracktype
         self.source = 'volumio'
+
+    @staticmethod
+    def from_currently_playing():
+        volumiostate = urllib.request.urlopen('http://192.168.2.104:3000/api/v1/getState').read()
+        state = json.loads(volumiostate)
+        return VolumioTrack(
+            state['title'],
+            state['artist'],
+            state['album'] if state['album'] else '',
+            state['trackType'])
 
 
 class DBConnector(object):
@@ -111,17 +122,10 @@ class DBConnector(object):
 
 
 if __name__ == '__main__':
-    volumiostate = urllib.request.urlopen('http://192.168.2.104:3000/api/v1/getState').read()
-    state = json.loads(volumiostate)
     #print(json.dumps(state, indent=4))
 
-    track = VolumioTrack(
-            state['title'],
-            state['artist'],
-            state['album'] if state['album'] else '',
-            state['trackType'])
+    track = VolumioTrack.from_currently_playing()
 
-    #print(json.dumps(entry, indent=4))
     with DBConnector(logfile) as db:
         last_tracks = db.get_last_tracks(4)
         if track not in last_tracks:
