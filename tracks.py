@@ -65,7 +65,7 @@ class VolumioTrack(Track):
     def from_currently_playing(source):
         volumiostate = urllib.request.urlopen('http://{}:{}/api/v1/getState'.format(source[0], source[1])).read()
         try:
-            state = json.loads(volumiostate)
+            state = json.loads(volumiostate.decode('utf-8'))
             if state['status'] == 'stop':
                 return None
             should_scrobble = state['trackType'] != 'webradio'
