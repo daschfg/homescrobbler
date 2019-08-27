@@ -12,6 +12,9 @@
 # Timestamp
 
 from datetime import datetime
+from datetime import timezone
+from dateutil import parser
+from dateutil import tz
 import json
 import pylast
 from pylast import LastFMNetwork
@@ -199,7 +202,12 @@ class LastFMConnector(LastFMNetwork):
                 password_hash=password_hash)
 
     def scrobble(self, track):
-        LastFMNetwork.scrobble(self, track.artist, track.title, time.time(), track.album)
+        if track.timestamp:
+            timestamp = parser.parse(track.timestamp).replace(tzinfo=timezone.utc)
+            timestamp = time.mktime(timestamp.astimezone(tz.tzlocal()).timetuple())
+        else:
+            timestamp = time.time()
+        LastFMNetwork.scrobble(self, track.artist, track.title, timestamp, track.album)
 
 
 if __name__ == '__main__':
