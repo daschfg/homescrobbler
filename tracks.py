@@ -17,13 +17,23 @@ import urllib.request
 
 
 class Track(object):
-    def __init__(self, title, artist, album, should_scrobble=True, scrobbled=False, idx=None, timestamp=time.time()):
+    def __init__(
+            self,
+            title,
+            artist,
+            album,
+            tracktype='track',
+            source='undefined',
+            should_scrobble=True,
+            scrobbled=False,
+            idx=None,
+            timestamp=time.time()):
         self.title = title
         self.artist = artist
         self.album = album
 
-        self.tracktype = 'track'
-        self.source = 'undefined'
+        self.tracktype = tracktype
+        self.source = source
         self.should_scrobble = should_scrobble
         self.scrobbled = scrobbled
         self.idx = idx
@@ -55,47 +65,57 @@ class Track(object):
         return Track(title, artist, album, idx=idx, timestamp=timestamp)
 
 
-class VolumioTrack(Track):
-    def __init__(self, title, artist, album, tracktype, should_scrobble=True, scrobbled=False):
-        Track.__init__(self, title, artist, album, should_scrobble, scrobbled)
-        self.tracktype = tracktype
-        self.source = 'volumio'
+class MediaPlayer(object):
+    def __init__(self):
+        pass
 
-    @staticmethod
-    def from_currently_playing(source):
-        volumiostate = urllib.request.urlopen('http://{}:{}/api/v1/getState'.format(source[0], source[1])).read()
+    def get_current_track(self):
+        raise NotImplementedError
+
+
+class VolumioPlayer(MediaPlayer):
+    def __init__(self, ip, port):
+        self.ip = ip
+        self.port = port
+
+    def get_current_track(self):
+        volumiostate = urllib.request.urlopen('http://{}:{}/api/v1/getState'.format(self.ip, self.port)).read()
         try:
             state = json.loads(volumiostate.decode('utf-8'))
             if state['status'] == 'stop':
                 return None
             should_scrobble = state['trackType'] != 'webradio'
-            return VolumioTrack(
+            return Track(
                 state['title'],
                 state['artist'],
                 state['album'] if state['album'] else '',
                 state['trackType'],
-                should_scrobble=should_scrobble)
+                source='volumio',
+                should_scrobble=should_scrobble,
+                scrobbled=False)
         except KeyError:
+            print('KeyError')
             return None
 
 
-class RaumfeldTrack(Track):
-    def __init__(self, title, artist, album, tracktype, should_scrobble=True, scrobbled=False):
-        Track.__init__(self, title, artist, album, should_scrobble, scrobbled)
-        self.tracktype = tracktype
-        self.source = 'raumfeld'
+class RaumfeldPlayer(MediaPlayer):
+    def __init__(self, ip, port):
+        self.ip = ip
+        self.port = port
 
-    @staticmethod
-    def from_currently_playing(source):
-        raumfeldstate = urllib.request.urlopen('http://{}:{}/raumserver/controller/getRendererState'.format(source[0], source[1])).read()
+    def get_current_track(self):
+        # TODO: Auswerten, ob aktuell tatsächlich läuft
+        raumfeldstate = urllib.request.urlopen('http://{}:{}/raumserver/controller/getRendererState'.format(self.ip, self.port)).read()
         try:
             state = json.loads(raumfeldstate)['data'][0]['mediaItem']
             should_scrobble = state['name'] == 'Track'
-            return RaumfeldTrack(
+            return Track(
                 state['title'] if state['title'] else '',
                 state['artist'] if state['artist'] else '',
                 state['album'] if state['album'] else '',
-                state['name'] if state['name'] else '',
-                should_scrobble=should_scrobble)
+                tracktype=state['name'] if state['name'] else '',
+                source='raumfeld',
+                should_scrobble=should_scrobble,
+                scrobbled=False)
         except TypeError:
             return None
