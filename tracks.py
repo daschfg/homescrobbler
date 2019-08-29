@@ -107,7 +107,7 @@ class RaumfeldPlayer(MediaPlayer):
         # TODO: Auswerten, ob aktuell tatsächlich läuft
         raumfeldstate = urllib.request.urlopen('http://{}:{}/raumserver/controller/getRendererState'.format(self.ip, self.port)).read()
         try:
-            state = json.loads(raumfeldstate)['data'][0]['mediaItem']
+            state = json.loads(raumfeldstate.decode('utf-8'))['data'][0]['mediaItem']
             should_scrobble = state['name'] == 'Track'
             return Track(
                 state['title'] if state['title'] else '',
