@@ -2,18 +2,22 @@
 #-*- coding: utf-8 -*-
 
 import database
+import os
 import tracks
 import time
-from config import *
+import config
 
 
 if __name__ == '__main__':
-    players = [
-            tracks.VolumioPlayer(volumio_address[0], volumio_address[1]),
-            tracks.RaumfeldPlayer(raumfeld_address[0], raumfeld_address[1])
-            ]
+    if os.path.isfile('./config.yml'):
+        configname = 'config.yml'
+    else:
+        configname = 'config_default.yml'
 
-    with database.DBConnector(dbfile) as db:
+    cfg = config.Config(configname)
+    players = cfg.players
+
+    with database.DBConnector(cfg.dbfile) as db:
         for player in players:
             track = player.get_current_track()
             if track and track not in db.get_last_tracks(4, track.source):

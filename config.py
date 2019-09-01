@@ -1,10 +1,24 @@
-volumio_address = ('192.168.2.104', 3000)
-raumfeld_address = ('192.168.2.126', 8080)
+#!/usr/bin/python
+#-*- coding: utf-8 -*-
 
-API_KEY = 'YOUR_API_KEY'
-API_SECRET = 'YOUR_API_SECRET'
+import yaml
+import tracks
 
-lastfm_username = 'YOUR_USERNAME'
-lastfm_password_hash = 'YOUR_PASSWORD'
 
-dbfile="musiclog.db"
+class Config(object):
+    def __init__(self, filename):
+        with open(filename, 'r') as ymlfile:
+            config = yaml.load(ymlfile, Loader=yaml.BaseLoader)
+        
+        self.lastfm_api_key = config['lastfm']['api_key']
+        self.lastfm_api_secret = config['lastfm']['api_secret']
+        self.username = config['lastfm']['username']
+        self.password_hash = config['lastfm']['password_hash']
+
+        self.dbfile = config['db']['filename']
+        
+        self.players = []
+        for device in config['devices']:
+            for key in device.keys():
+                player = tracks.MediaPlayerFactory.create(device[key]['type'], device[key]['ip'], device[key]['port'])
+                self.players.append(player)

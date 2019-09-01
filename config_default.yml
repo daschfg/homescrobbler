@@ -1,0 +1,18 @@
+lastfm:
+    api_key: YOUR_API_KEY_HERE
+    api_secret: YOUR_API_SECRET_HERE
+    username: YOUR_LASTFM_USERNAME_HERE
+    password_hash: YOUR_PASSWORD_HASH_HERE
+
+db:
+    filename: 'musiclog.db'
+
+devices:
+    - room1:
+        type: raumfeld
+        ip: 192.168.2.101
+        port: 8080
+    - room2:
+        type: volumio
+        ip: 192.168.2.102
+        port: 3000

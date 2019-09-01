@@ -119,3 +119,14 @@ class RaumfeldPlayer(MediaPlayer):
                 scrobbled=False)
         except TypeError:
             return None
+
+
+class MediaPlayerFactory(object):
+    players = {
+            'volumio': VolumioPlayer,
+            'raumfeld': RaumfeldPlayer
+        }
+
+    @staticmethod
+    def create(playertype, ip, port):
+        return MediaPlayerFactory.players[playertype](ip, port)

@@ -8,6 +8,7 @@ verify_ssl = true
 [packages]
 pylast = "*"
 python-dateutil = "*"
+pyyaml = "*"
 
 [requires]
 python_version = "3"
