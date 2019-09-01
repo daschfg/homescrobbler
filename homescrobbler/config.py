@@ -2,7 +2,7 @@
 #-*- coding: utf-8 -*-
 
 import yaml
-import tracks
+import homescrobbler.tracks as tracks
 
 
 class Config(object):

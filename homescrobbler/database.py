@@ -2,7 +2,7 @@
 #-*- coding: utf-8 -*-
 
 import sqlite3
-import tracks
+import homescrobbler.tracks as tracks
 
 
 class DBConnector(object):
