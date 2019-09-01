@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
 
+import argparse
 import os
 import time
 import homescrobbler.database as database
@@ -35,13 +36,35 @@ def scrobble(cfg):
 
 
 def main():
-    if os.path.isfile('docs/config.yml'):
+    parser = argparse.ArgumentParser(
+            description='Log or scrobble music listened to',
+        )
+
+    parser.add_argument(
+            'command',
+            help='Subcommand to run',
+            choices=['log', 'scrobble'],
+        )
+    parser.add_argument(
+            '-c', '--config',
+            help='Configfile',
+            default=None
+        )
+
+    args = parser.parse_args()
+    if args.config:
+        print('Using', args.config, 'as config')
+        configname = args.config
+    elif os.path.isfile('docs/config.yml'):
         configname = 'docs/config.yml'
     else:
         configname = 'docs/config_default.yml'
 
     cfg = config.Config(configname)
-    log_music(cfg)
+    if args.command == 'log':
+        log_music(cfg)
+    elif args.command == 'scrobble':
+        scrobble(cfg)
 
     
 if __name__ == '__main__':

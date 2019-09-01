@@ -9,6 +9,7 @@ verify_ssl = true
 pylast = "*"
 python-dateutil = "*"
 pyyaml = "*"
+argparse = "*"
 
 [requires]
 python_version = "3"
