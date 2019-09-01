@@ -50,10 +50,17 @@ def main():
             help='Configfile',
             default=None
         )
+    parser.add_argument(
+            '-v', '--verbose',
+            help='Verbose output',
+            action='store_true',
+            default=False
+        )
 
     args = parser.parse_args()
     if args.config:
-        print('Using', args.config, 'as config')
+        if args.verbose:
+            print('Using', args.config, 'as config')
         configname = args.config
     elif os.path.isfile('docs/config.yml'):
         configname = 'docs/config.yml'
