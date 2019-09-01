@@ -28,8 +28,7 @@ def scrobble(cfg):
             password_hash=cfg.password_hash)
  
     with database.DBConnector(cfg.dbfile) as db:
-        tracks = db.get_unscrobbled()
-        for track in tracks:
+        for track in db.get_unscrobbled():
             lastfm.scrobble(track)
             print('Scrobbled ', track)
             db.mark_scrobbled(track)
@@ -42,6 +41,12 @@ def list_unscrobbled(cfg):
 
 
 def main():
+    actions = {
+            'log': log_music,
+            'scrobble': scrobble,
+            'list': list_unscrobbled
+        }
+
     parser = argparse.ArgumentParser(
             description='Log or scrobble music listened to',
         )
@@ -49,7 +54,7 @@ def main():
     parser.add_argument(
             'command',
             help='Subcommand to run',
-            choices=['log', 'scrobble', 'list'],
+            choices=actions.keys(),
         )
     parser.add_argument(
             '-c', '--config',
@@ -74,12 +79,7 @@ def main():
         configname = 'docs/config_default.yml'
 
     cfg = config.Config(configname)
-    if args.command == 'log':
-        log_music(cfg)
-    elif args.command == 'scrobble':
-        scrobble(cfg)
-    elif args.command == 'list':
-        list_unscrobbled(cfg)
+    actions[args.command](cfg)
 
     
 if __name__ == '__main__':
