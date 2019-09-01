@@ -35,6 +35,12 @@ def scrobble(cfg):
             db.mark_scrobbled(track)
 
 
+def list_unscrobbled(cfg):
+    with database.DBConnector(cfg.dbfile) as db:
+        for track in db.get_unscrobbled():
+            print(track.timestamp + ': ' + str(track))
+
+
 def main():
     parser = argparse.ArgumentParser(
             description='Log or scrobble music listened to',
@@ -43,7 +49,7 @@ def main():
     parser.add_argument(
             'command',
             help='Subcommand to run',
-            choices=['log', 'scrobble'],
+            choices=['log', 'scrobble', 'list'],
         )
     parser.add_argument(
             '-c', '--config',
@@ -72,6 +78,8 @@ def main():
         log_music(cfg)
     elif args.command == 'scrobble':
         scrobble(cfg)
+    elif args.command == 'list':
+        list_unscrobbled(cfg)
 
     
 if __name__ == '__main__':
