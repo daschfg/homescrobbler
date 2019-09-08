@@ -84,18 +84,21 @@ class VolumioPlayer(MediaPlayer):
             state = json.loads(volumiostate.decode('utf-8'))
             if state['status'] == 'stop':
                 return None
-            should_scrobble = state['trackType'] != 'webradio'
             return Track(
                 state['title'],
                 state['artist'],
                 state['album'] if state['album'] else '',
                 state['trackType'],
                 source='volumio',
-                should_scrobble=should_scrobble,
+                should_scrobble=self.should_scrobble_tracktype(state['trackType']),
                 scrobbled=False)
         except KeyError:
             print('KeyError')
             return None
+
+    @staticmethod
+    def should_scrobble_tracktype(tracktype):
+        return tracktype != 'webradio' and tracktype != 'spotify'
 
 
 class RaumfeldPlayer(MediaPlayer):
