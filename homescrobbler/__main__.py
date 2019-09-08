@@ -8,6 +8,7 @@ import homescrobbler.database as database
 import homescrobbler.config as config
 import homescrobbler.tracks as tracks
 import homescrobbler.scrobbler as scrobbler
+from homescrobbler import __progname__, __version__
 
 
 def log_music(cfg):
@@ -40,11 +41,16 @@ def list_unscrobbled(cfg):
             print(track.timestamp + ': ' + str(track))
 
 
+def print_version(_):
+    print(__progname__ + ' v' + __version__)
+
+
 def main():
     actions = {
             'log': log_music,
             'scrobble': scrobble,
-            'list': list_unscrobbled
+            'list': list_unscrobbled,
+            'version': print_version
         }
 
     parser = argparse.ArgumentParser(
