@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 # Datenbank enthält:
 # Title
@@ -46,7 +46,8 @@ class Track(object):
         return not self.__eq__(other)
 
     def __str__(self):
-        return ('[IGN] ' if not self.should_scrobble else '') + (self.artist if self.artist else '') + " - " + self.title
+        return ('[IGN] ' if not self.should_scrobble else '') + \
+            (self.artist if self.artist else '') + " - " + self.title
 
     def get_dbvalues(self):
         return (
@@ -79,7 +80,8 @@ class VolumioPlayer(MediaPlayer):
         self.port = port
 
     def get_current_track(self):
-        volumiostate = urllib.request.urlopen('http://{}:{}/api/v1/getState'.format(self.ip, self.port)).read()
+        volumiostate = urllib.request.urlopen(
+            'http://{}:{}/api/v1/getState'.format(self.ip, self.port)).read()
         try:
             state = json.loads(volumiostate.decode('utf-8'))
             if state['status'] == 'stop':
@@ -90,7 +92,8 @@ class VolumioPlayer(MediaPlayer):
                 state['album'] if state['album'] else '',
                 state['trackType'],
                 source='volumio',
-                should_scrobble=self.should_scrobble_tracktype(state['trackType']),
+                should_scrobble=self.should_scrobble_tracktype(
+                    state['trackType']),
                 scrobbled=False)
         except KeyError:
             print('KeyError')
@@ -108,9 +111,11 @@ class RaumfeldPlayer(MediaPlayer):
 
     def get_current_track(self):
         # TODO: Auswerten, ob aktuell tatsächlich läuft
-        raumfeldstate = urllib.request.urlopen('http://{}:{}/raumserver/controller/getRendererState'.format(self.ip, self.port)).read()
+        raumfeldstate = urllib.request.urlopen(
+            'http://{}:{}/raumserver/controller/getRendererState'.format(self.ip, self.port)).read()
         try:
-            state = json.loads(raumfeldstate.decode('utf-8'))['data'][0]['mediaItem']
+            state = json.loads(raumfeldstate.decode(
+                'utf-8'))['data'][0]['mediaItem']
             should_scrobble = state['name'] == 'Track'
             return Track(
                 state['title'] if state['title'] else '',
@@ -126,9 +131,9 @@ class RaumfeldPlayer(MediaPlayer):
 
 class MediaPlayerFactory(object):
     players = {
-            'volumio': VolumioPlayer,
-            'raumfeld': RaumfeldPlayer
-        }
+        'volumio': VolumioPlayer,
+        'raumfeld': RaumfeldPlayer
+    }
 
     @staticmethod
     def create(playertype, ip, port):

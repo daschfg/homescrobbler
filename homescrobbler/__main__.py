@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import argparse
 import os
@@ -23,11 +23,11 @@ def log_music(cfg):
 
 def scrobble(cfg):
     lastfm = scrobbler.LastFMConnector(
-            api_key=cfg.lastfm_api_key,
-            api_secret=cfg.lastfm_api_secret,
-            username=cfg.username,
-            password_hash=cfg.password_hash)
- 
+        api_key=cfg.lastfm_api_key,
+        api_secret=cfg.lastfm_api_secret,
+        username=cfg.username,
+        password_hash=cfg.password_hash)
+
     with database.DBConnector(cfg.dbfile) as db:
         for track in db.get_unscrobbled():
             lastfm.scrobble(track)
@@ -47,32 +47,32 @@ def print_version(_):
 
 def main():
     actions = {
-            'log': log_music,
-            'scrobble': scrobble,
-            'list': list_unscrobbled,
-            'version': print_version
-        }
+        'log': log_music,
+        'scrobble': scrobble,
+        'list': list_unscrobbled,
+        'version': print_version
+    }
 
     parser = argparse.ArgumentParser(
-            description='Log or scrobble music listened to',
-        )
+        description='Log or scrobble music listened to',
+    )
 
     parser.add_argument(
-            'command',
-            help='Subcommand to run',
-            choices=actions.keys(),
-        )
+        'command',
+        help='Subcommand to run',
+        choices=actions.keys(),
+    )
     parser.add_argument(
-            '-c', '--config',
-            help='Configfile',
-            default=None
-        )
+        '-c', '--config',
+        help='Configfile',
+        default=None
+    )
     parser.add_argument(
-            '-v', '--verbose',
-            help='Verbose output',
-            action='store_true',
-            default=False
-        )
+        '-v', '--verbose',
+        help='Verbose output',
+        action='store_true',
+        default=False
+    )
 
     args = parser.parse_args()
     if args.config:
@@ -87,6 +87,6 @@ def main():
     cfg = config.Config(configname)
     actions[args.command](cfg)
 
-    
+
 if __name__ == '__main__':
-   main() 
+    main()

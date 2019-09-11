@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import sqlite3
 import homescrobbler.tracks as tracks
@@ -17,7 +17,7 @@ class DBConnector(object):
         if not self.is_existent():
             self.create()
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         self.connection.close()
 
@@ -46,10 +46,12 @@ class DBConnector(object):
 
     def get_last_entries(self, n=1, source=None):
         lastentry_cmd = """
-        SELECT * FROM playlog ORDER BY id DESC LIMIT ?;
+        SELECT * FROM playlog
+        ORDER BY id DESC LIMIT ?;
         """
         lastentry_cmd_filtered = """
-        SELECT * FROM playlog WHERE source = ? ORDER BY id DESC LIMIT ?;
+        SELECT * FROM playlog
+        WHERE source = ? ORDER BY id DESC LIMIT ?;
         """
         if source is None:
             self.cursor.execute(lastentry_cmd, (n,))
@@ -58,11 +60,13 @@ class DBConnector(object):
         return self.cursor.fetchall()
 
     def get_last_tracks(self, n=1, source=None):
-        return [i for i in map(tracks.Track.from_dbvalues, self.get_last_entries(source, n))]
+        return [i for i in map(tracks.Track.from_dbvalues,
+                               self.get_last_entries(source, n))]
 
     def is_existent(self):
         existent_cmd = """
-        SELECT name FROM sqlite_master WHERE type='table' AND name='playlog';
+        SELECT name FROM sqlite_master
+        WHERE type='table' AND name='playlog';
         """
         self.cursor.execute(existent_cmd)
         return len(self.cursor.fetchall()) == 1
@@ -73,7 +77,8 @@ class DBConnector(object):
         WHERE should_scrobble AND NOT scrobbled;
         """
         self.cursor.execute(unscrobbled_cmd)
-        return [i for i in map(tracks.Track.from_dbvalues, self.cursor.fetchall())]
+        return [i for i in map(tracks.Track.from_dbvalues,
+                               self.cursor.fetchall())]
 
     def mark_scrobbled(self, track):
         if not track.idx:
@@ -85,5 +90,3 @@ class DBConnector(object):
         """
         self.cursor.execute(set_scrobbled_cmd, (track.idx,))
         self.connection.commit()
-
-
